@@ -180,6 +180,17 @@ func TestAccrueInterest_ZeroDailyRateStillMarksOverdue(t *testing.T) {
 	require.True(t, info.Penalty.IsZero())
 }
 
+func TestDaysBetween_HandlesDSTByUsingUTC(t *testing.T) {
+	// Simulate DST transition by using a location with DST and ensuring calculation is UTC-based.
+	loc, err := time.LoadLocation("America/New_York")
+	require.NoError(t, err)
+
+	start := time.Date(2024, 3, 9, 0, 0, 0, 0, loc) // before DST jump
+	end := time.Date(2024, 3, 11, 0, 0, 0, 0, loc)  // after DST jump (23h day in between)
+
+	require.Equal(t, 2, daysBetween(start, end))
+}
+
 func TestMarkOverdue_ValidationAndDoubleCall(t *testing.T) {
 	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	uid := mustUserID(t, base)

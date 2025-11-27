@@ -191,8 +191,8 @@ func (p *Payment) AccrueInterest(now time.Time, dailyRateBPS int64) error {
 }
 
 func truncateToDate(t time.Time) time.Time {
-	y, m, d := t.Date()
-	return time.Date(y, m, d, 0, 0, 0, 0, t.Location())
+	y, m, d := t.In(time.UTC).Date()
+	return time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
 }
 
 func daysBetween(start, end time.Time) int {
