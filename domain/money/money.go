@@ -51,6 +51,11 @@ func New(amount decimal.Decimal, currency Currency) (Money, error) {
 	}, nil
 }
 
+// Zero returns a zero money for the given currency.
+func Zero(currency Currency) (Money, error) {
+	return New(decimal.Zero, currency)
+}
+
 // FromMinor builds Money from minor units (e.g., KRW won, USD cents).
 func FromMinor(minor int64, currency Currency) (Money, error) {
 	scale, err := currencyScale(currency)
