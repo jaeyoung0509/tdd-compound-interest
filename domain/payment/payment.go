@@ -21,6 +21,8 @@ type Payment struct {
 	updatedAt time.Time
 }
 
+const maxOverdueDays = 365*3 + 1 // three years with a leap-day allowance
+
 func New(userID user.ID, amount money.Money, dueDate time.Time, now time.Time) (*Payment, error) {
 	if userID.IsZero() {
 		return nil, ErrInvalidUserID
@@ -122,4 +124,89 @@ func (p *Payment) MarkOverdue(calculatedAt time.Time, daysOverdue int, penalty m
 	p.status = StatusOverdue
 	p.updatedAt = calculatedAt
 	return nil
+}
+
+// AccrueInterestWith pulls time and rate from collaborators to simplify wiring.
+func (p *Payment) AccrueInterestWith(clock Clock, rateProvider DailyRateProvider) error {
+	now := clock.Now()
+	rate, err := rateProvider.DailyRateBPS(now)
+	if err != nil {
+		return err
+	}
+	return p.AccrueInterest(now, rate)
+}
+
+// AccrueInterest compounds daily interest from the due date (or last accrual)
+// up to the provided time using basis points per day. No-op if not past due.
+func (p *Payment) AccrueInterest(now time.Time, dailyRateBPS int64) error {
+	if now.IsZero() {
+		return ErrInvalidOverdueArgs
+	}
+	if p.status == StatusPaid {
+		return ErrPaidPaymentCannotOverdue
+	}
+
+	anchor := p.dueDate
+	penalty, err := money.Zero(p.amount.Currency())
+	if err != nil {
+		return err
+	}
+	accumulatedDays := 0
+	if p.overdue != nil {
+		anchor = p.overdue.CalculatedAt
+		penalty = p.overdue.Penalty
+		accumulatedDays = p.overdue.DaysOverdue
+	}
+
+	if !now.After(anchor) {
+		return nil
+	}
+
+	days := daysBetween(anchor, now)
+	if days <= 0 {
+		return nil
+	}
+
+	totalDays := accumulatedDays + days
+	if totalDays > maxOverdueDays {
+		return ErrOverduePeriodTooLong
+	}
+
+	currentPenalty := penalty
+	for i := 0; i < days; i++ {
+		base, err := p.amount.Add(currentPenalty)
+		if err != nil {
+			return err
+		}
+		delta := base.MulBPS(dailyRateBPS)
+		currentPenalty, err = currentPenalty.Add(delta)
+		if err != nil {
+			return err
+		}
+	}
+
+	p.overdue = &OverdueInfo{
+		ID:           shared.NewID(),
+		IsOverdue:    true,
+		DaysOverdue:  totalDays,
+		Penalty:      currentPenalty,
+		CalculatedAt: truncateToDate(now),
+	}
+	p.status = StatusOverdue
+	p.updatedAt = now
+	return nil
+}
+
+func truncateToDate(t time.Time) time.Time {
+	y, m, d := t.In(time.UTC).Date()
+	return time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
+}
+
+func daysBetween(start, end time.Time) int {
+	s := truncateToDate(start)
+	e := truncateToDate(end)
+	if !e.After(s) {
+		return 0
+	}
+	return int(e.Sub(s).Hours() / 24)
 }

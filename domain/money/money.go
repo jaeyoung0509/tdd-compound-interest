@@ -65,6 +65,19 @@ func FromMinor(minor int64, currency Currency) (Money, error) {
 	}, nil
 }
 
+// Zero returns a zero-valued Money for the given currency.
+func Zero(currency Currency) (Money, error) {
+	scale, err := currencyScale(currency)
+	if err != nil {
+		return Money{}, err
+	}
+	return Money{
+		amount:   decimal.Zero,
+		currency: currency,
+		scale:    scale,
+	}, nil
+}
+
 func (m Money) Currency() Currency {
 	return m.currency
 }
