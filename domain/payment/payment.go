@@ -21,6 +21,8 @@ type Payment struct {
 	updatedAt time.Time
 }
 
+const maxOverdueDays = 365*3 + 1 // three years with a leap-day allowance
+
 func New(userID user.ID, amount money.Money, dueDate time.Time, now time.Time) (*Payment, error) {
 	if userID.IsZero() {
 		return nil, ErrInvalidUserID
@@ -165,6 +167,11 @@ func (p *Payment) AccrueInterest(now time.Time, dailyRateBPS int64) error {
 		return nil
 	}
 
+	totalDays := accumulatedDays + days
+	if totalDays > maxOverdueDays {
+		return ErrOverduePeriodTooLong
+	}
+
 	currentPenalty := penalty
 	for i := 0; i < days; i++ {
 		base, err := p.amount.Add(currentPenalty)
@@ -181,7 +188,7 @@ func (p *Payment) AccrueInterest(now time.Time, dailyRateBPS int64) error {
 	p.overdue = &OverdueInfo{
 		ID:           shared.NewID(),
 		IsOverdue:    true,
-		DaysOverdue:  accumulatedDays + days,
+		DaysOverdue:  totalDays,
 		Penalty:      currentPenalty,
 		CalculatedAt: truncateToDate(now),
 	}

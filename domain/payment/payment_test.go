@@ -180,6 +180,39 @@ func TestAccrueInterest_ZeroDailyRateStillMarksOverdue(t *testing.T) {
 	require.True(t, info.Penalty.IsZero())
 }
 
+func TestAccrueInterest_OverMaxDaysReturnsError(t *testing.T) {
+	base := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+	uid := mustUserID(t, base)
+	amt := mustKRW(t, 10_000)
+
+	p, err := New(uid, amt, base, base)
+	require.NoError(t, err)
+
+	overLimit := base.AddDate(3, 0, 1) // 3 years + 1 day (leap-year safe overage)
+	err = p.AccrueInterest(overLimit, 1_000)
+	require.ErrorIs(t, err, ErrOverduePeriodTooLong)
+	require.Nil(t, p.OverdueInfo())
+}
+
+func TestAccrueInterest_TotalDaysExceedingLimitFails(t *testing.T) {
+	base := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+	uid := mustUserID(t, base)
+	amt := mustKRW(t, 10_000)
+
+	p, err := New(uid, amt, base, base)
+	require.NoError(t, err)
+
+	// First accrual hits the allowed max (3 years window).
+	limitDate := base.AddDate(3, 0, 0)
+	require.NoError(t, p.AccrueInterest(limitDate, 1_000))
+	require.Equal(t, maxOverdueDays, p.OverdueInfo().DaysOverdue)
+
+	// One more day should fail and not change the snapshot.
+	err = p.AccrueInterest(limitDate.Add(24*time.Hour), 1_000)
+	require.ErrorIs(t, err, ErrOverduePeriodTooLong)
+	require.Equal(t, maxOverdueDays, p.OverdueInfo().DaysOverdue)
+}
+
 func TestDaysBetween_HandlesDSTByUsingUTC(t *testing.T) {
 	// Simulate DST transition by using a location with DST and ensuring calculation is UTC-based.
 	loc, err := time.LoadLocation("America/New_York")

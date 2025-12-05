@@ -53,3 +53,13 @@ func TestApplyBPS(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, decimal.NewFromInt(11_000), withRate.Amount())
 }
+
+func TestZeroMoney(t *testing.T) {
+	m, err := Zero(CurrencyUSD)
+	require.NoError(t, err)
+	require.True(t, m.IsZero())
+	require.Equal(t, CurrencyUSD, m.Currency())
+
+	_, err = Zero("XXX")
+	require.ErrorIs(t, err, ErrInvalidCurrency)
+}
