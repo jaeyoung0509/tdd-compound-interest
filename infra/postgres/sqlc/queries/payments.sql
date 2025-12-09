@@ -8,9 +8,9 @@ WHERE id = $1;
 INSERT INTO payments (id, user_id, amount, currency, due_date, paid_at, status, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 ON CONFLICT (id) DO UPDATE SET 
-    amount = EXCLUDED.amount 
-    paid_at = EXCLUDED.paid_at 
-    status = EXCLUDED.status 
+    amount = EXCLUDED.amount,
+    paid_at = EXCLUDED.paid_at,
+    status = EXCLUDED.status,
     updated_at = EXCLUDED.updated_at; 
 
 
