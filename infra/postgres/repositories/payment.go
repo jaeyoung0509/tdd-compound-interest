@@ -7,7 +7,6 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jaeyoung0509/compound-interest/domain/money"
 	"github.com/jaeyoung0509/compound-interest/domain/payment"
 	"github.com/jaeyoung0509/compound-interest/domain/shared"
@@ -20,8 +19,8 @@ type PaymentRepository struct {
 	queries *generated.Queries
 }
 
-func NewPaymentRepository(pool *pgxpool.Pool) *PaymentRepository {
-	return &PaymentRepository{queries: generated.New(pool)}
+func NewPaymentRepository(db generated.DBTX) *PaymentRepository {
+	return &PaymentRepository{queries: generated.New(db)}
 }
 
 func (r *PaymentRepository) Get(ctx context.Context, id shared.ID) (*payment.Payment, error) {
