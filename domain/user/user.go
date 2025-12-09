@@ -39,6 +39,7 @@ type User struct {
 	id        ID
 	name      string
 	createdAt time.Time
+	updatedAt time.Time
 }
 
 func New(name string, now time.Time) (*User, error) {
@@ -53,10 +54,11 @@ func New(name string, now time.Time) (*User, error) {
 		id:        NewID(),
 		name:      name,
 		createdAt: now,
+		updatedAt: now,
 	}, nil
 }
 
-func Reconstitute(id ID, name string, createdAt time.Time) (*User, error) {
+func Reconstitute(id ID, name string, createdAt, updatedAt time.Time) (*User, error) {
 	name = strings.TrimSpace(name)
 	if id.IsZero() {
 		return nil, ErrInvalidUserID
@@ -67,7 +69,7 @@ func Reconstitute(id ID, name string, createdAt time.Time) (*User, error) {
 	if createdAt.IsZero() {
 		return nil, ErrInvalidUserID
 	}
-	return &User{id: id, name: name, createdAt: createdAt}, nil
+	return &User{id: id, name: name, createdAt: createdAt, updatedAt: updatedAt}, nil
 }
 
 func (u *User) ID() ID {
@@ -80,4 +82,8 @@ func (u *User) Name() string {
 
 func (u *User) CreatedAt() time.Time {
 	return u.createdAt
+}
+
+func (u *User) UpdatedAt() time.Time {
+	return u.updatedAt
 }
