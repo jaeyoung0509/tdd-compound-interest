@@ -31,7 +31,7 @@ func (r *UserRepository) Get(ctx context.Context, id user.ID) (*user.User, error
 }
 
 func (r *UserRepository) Save(ctx context.Context, u *user.User) error {
-	return r.queries.UpsertUser(ctx, generated.UpsertUserParams{
+	return r.queries.InsertUser(ctx, generated.InsertUserParams{
 		ID:        u.ID().Value().String(),
 		Name:      u.Name(),
 		CreatedAt: pgtype.Timestamptz{Time: u.CreatedAt(), Valid: true},

@@ -29,23 +29,20 @@ func (q *Queries) GetUser(ctx context.Context, id string) (User, error) {
 	return i, err
 }
 
-const upsertUser = `-- name: UpsertUser :exec
+const insertUser = `-- name: InsertUser :exec
 INSERT INTO users (id, name, created_at, updated_at)
 VALUES ($1, $2, $3, $4)
-ON CONFLICT (id) DO UPDATE SET
-    name = EXCLUDED.name,
-    updated_at = EXCLUDED.updated_at
 `
 
-type UpsertUserParams struct {
+type InsertUserParams struct {
 	ID        string             `json:"id"`
 	Name      string             `json:"name"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
-func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) error {
-	_, err := q.db.Exec(ctx, upsertUser,
+func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) error {
+	_, err := q.db.Exec(ctx, insertUser,
 		arg.ID,
 		arg.Name,
 		arg.CreatedAt,
