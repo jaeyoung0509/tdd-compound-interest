@@ -29,6 +29,11 @@ func (id ID) IsZero() bool {
 	return shared.IsZero(id.value)
 }
 
+// IDFromShared creates a user.ID from shared.ID.
+func IDFromShared(id shared.ID) ID {
+	return ID{value: id}
+}
+
 // User carries minimal identity info with an aggregate-scoped ID.
 type User struct {
 	id        ID

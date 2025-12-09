@@ -210,3 +210,28 @@ func daysBetween(start, end time.Time) int {
 	}
 	return int(e.Sub(s).Hours() / 24)
 }
+
+// Reconstitute rebuilds a Payment from persistence layer without validation.
+// This should only be used by the repository layer.
+func Reconstitute(
+	id shared.ID,
+	userID user.ID,
+	amount money.Money,
+	dueDate time.Time,
+	paidAt *time.Time,
+	status Status,
+	overdue *OverdueInfo,
+	createdAt, updatedAt time.Time,
+) *Payment {
+	return &Payment{
+		id:        id,
+		userID:    userID,
+		amount:    amount,
+		dueDate:   dueDate,
+		paidAt:    paidAt,
+		status:    status,
+		overdue:   overdue,
+		createdAt: createdAt,
+		updatedAt: updatedAt,
+	}
+}
