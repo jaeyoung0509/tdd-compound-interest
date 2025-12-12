@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/jaeyoung0509/compound-interest/domain/money"
+	dp "github.com/jaeyoung0509/compound-interest/domain/payment"
 	"github.com/jaeyoung0509/compound-interest/infra/postgres"
 	"github.com/jaeyoung0509/compound-interest/infra/postgres/testhelper"
 	"github.com/jaeyoung0509/compound-interest/usecase/payment"
@@ -151,11 +152,9 @@ func TestService_AccruePayment_AlreadyPaid(t *testing.T) {
 	// When: AccruePayment 실행
 	result, err := service.AccruePayment(ctx, paymentID)
 
-	// Then: 이미 완납되어 에러 또는 unchanged
-	// (실제 비즈니스 로직에 따라 다름)
-	_ = result
-	_ = err
-	// 여기서는 에러가 발생하거나, 변화 없이 반환되어야 함
+	// Then: 이미 완납된 payment는 연체 처리 불가 에러 반환
+	assert.ErrorIs(t, err, dp.ErrPaidPaymentCannotOverdue)
+	assert.Nil(t, result)
 }
 
 // FixedClock implements payment.Clock with a fixed time (for deterministic tests)
