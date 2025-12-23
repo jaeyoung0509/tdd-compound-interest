@@ -63,7 +63,7 @@ func TestService_AccruePayment_OverduePayment(t *testing.T) {
 	amount, _ := money.New(decimal.NewFromInt(100000), money.CurrencyKRW)
 	paymentID, err := testhelper.CreateTestPayment(
 		ctx, testDB.Pool, userID,
-		amount, pastDue, fixedTime,
+		amount, pastDue, pastDue,
 	)
 	require.NoError(t, err)
 
@@ -144,7 +144,7 @@ func TestService_AccruePayment_AlreadyPaid(t *testing.T) {
 	paidAt := fixedTime.Add(-2 * 24 * time.Hour)
 	paymentID, err := testhelper.CreateTestPayment(
 		ctx, testDB.Pool, userID,
-		amount, dueDate, fixedTime,
+		amount, dueDate, dueDate,
 		testhelper.WithPaidAt(paidAt),
 	)
 	require.NoError(t, err)

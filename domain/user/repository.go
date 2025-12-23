@@ -2,10 +2,11 @@ package user
 
 import (
 	"context"
-	"errors"
+
+	"github.com/jaeyoung0509/compound-interest/domain/shared"
 )
 
-var ErrUserNotFound = errors.New("user not found")
+var ErrUserNotFound = shared.NewDomainError(shared.CodeNotFound, "user not found")
 
 // Repository abstracts persistence for the User aggregate.
 type Repository interface {

@@ -27,11 +27,18 @@ func New(userID user.ID, amount money.Money, dueDate time.Time, now time.Time) (
 	if userID.IsZero() {
 		return nil, ErrInvalidUserID
 	}
+	if amount.Amount().Sign() <= 0 {
+		return nil, ErrInvalidAmount
+	}
 	if dueDate.IsZero() {
 		return nil, ErrInvalidDueDate
 	}
 	if now.IsZero() {
 		now = time.Now()
+	}
+	dueDate = truncateToDate(dueDate)
+	if truncateToDate(now).After(dueDate) {
+		return nil, ErrDueDateInPast
 	}
 
 	return &Payment{
@@ -95,6 +102,9 @@ func (p *Payment) Pay(paidAt time.Time) error {
 	}
 	if p.status == StatusPaid {
 		return ErrPaymentAlreadyPaid
+	}
+	if truncateToDate(paidAt).Before(truncateToDate(p.dueDate)) {
+		return ErrPaidBeforeDueDate
 	}
 
 	p.paidAt = &paidAt

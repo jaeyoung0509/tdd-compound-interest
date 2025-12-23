@@ -1,7 +1,6 @@
 package user
 
 import (
-	"errors"
 	"strings"
 	"time"
 
@@ -9,8 +8,8 @@ import (
 )
 
 var (
-	ErrInvalidUserName = errors.New("invalid user name")
-	ErrInvalidUserID   = errors.New("invalid user id")
+	ErrInvalidUserName = shared.NewDomainError(shared.CodeValidation, "invalid user name")
+	ErrInvalidUserID   = shared.NewDomainError(shared.CodeValidation, "invalid user id")
 )
 
 type ID struct {
