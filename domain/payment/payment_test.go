@@ -113,6 +113,20 @@ func TestPay_DoublePayFails(t *testing.T) {
 	require.Equal(t, StatusPaid, p.Status())
 }
 
+func TestPay_BeforeDueDateFails(t *testing.T) {
+	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	uid := mustUserID(t, base)
+	amt := mustKRW(t, 10_000)
+
+	dueDate := base.Add(24 * time.Hour)
+	p, err := New(uid, amt, dueDate, base)
+	require.NoError(t, err)
+
+	err = p.Pay(base)
+	require.ErrorIs(t, err, ErrPaidBeforeDueDate)
+	require.Equal(t, StatusScheduled, p.Status())
+}
+
 func TestMarkOverdue_FailsWhenPaid(t *testing.T) {
 	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	uid := mustUserID(t, base)
@@ -246,6 +260,24 @@ func TestMarkOverdue_ValidationAndDoubleCall(t *testing.T) {
 	second := p.OverdueInfo()
 	require.Equal(t, first.ID, second.ID)
 	require.Equal(t, first.CalculatedAt, second.CalculatedAt)
+}
+
+func TestNew_RejectsZeroAmount(t *testing.T) {
+	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	uid := mustUserID(t, base)
+	zero := mustKRW(t, 0)
+
+	_, err := New(uid, zero, base, base)
+	require.ErrorIs(t, err, ErrInvalidAmount)
+}
+
+func TestNew_RejectsPastDueDate(t *testing.T) {
+	base := time.Date(2024, 1, 2, 0, 0, 0, 0, time.UTC)
+	uid := mustUserID(t, base)
+	amt := mustKRW(t, 10_000)
+
+	_, err := New(uid, amt, base.Add(-24*time.Hour), base)
+	require.ErrorIs(t, err, ErrDueDateInPast)
 }
 
 func mustUserID(t *testing.T, now time.Time) user.ID {
