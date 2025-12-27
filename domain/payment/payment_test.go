@@ -122,7 +122,7 @@ func TestPay_BeforeDueDateFails(t *testing.T) {
 	p, err := New(uid, amt, dueDate, base)
 	require.NoError(t, err)
 
-	err = p.Pay(base.Add(12 * time.Hour))
+	err = p.Pay(base)
 	require.ErrorIs(t, err, ErrPaidBeforeDueDate)
 	require.Equal(t, StatusScheduled, p.Status())
 }
@@ -227,24 +227,6 @@ func TestAccrueInterest_TotalDaysExceedingLimitFails(t *testing.T) {
 	require.Equal(t, maxOverdueDays, p.OverdueInfo().DaysOverdue)
 }
 
-func TestNew_RejectsZeroAmount(t *testing.T) {
-	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-	uid := mustUserID(t, base)
-	zero := mustKRW(t, 0)
-
-	_, err := New(uid, zero, base, base)
-	require.ErrorIs(t, err, ErrInvalidAmount)
-}
-
-func TestNew_RejectsPastDueDate(t *testing.T) {
-	base := time.Date(2024, 1, 2, 0, 0, 0, 0, time.UTC)
-	uid := mustUserID(t, base)
-	amt := mustKRW(t, 10_000)
-
-	_, err := New(uid, amt, base.Add(-24*time.Hour), base)
-	require.ErrorIs(t, err, ErrDueDateInPast)
-}
-
 func TestDaysBetween_HandlesDSTByUsingUTC(t *testing.T) {
 	// Simulate DST transition by using a location with DST and ensuring calculation is UTC-based.
 	loc, err := time.LoadLocation("America/New_York")
@@ -278,6 +260,24 @@ func TestMarkOverdue_ValidationAndDoubleCall(t *testing.T) {
 	second := p.OverdueInfo()
 	require.Equal(t, first.ID, second.ID)
 	require.Equal(t, first.CalculatedAt, second.CalculatedAt)
+}
+
+func TestNew_RejectsZeroAmount(t *testing.T) {
+	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	uid := mustUserID(t, base)
+	zero := mustKRW(t, 0)
+
+	_, err := New(uid, zero, base, base)
+	require.ErrorIs(t, err, ErrInvalidAmount)
+}
+
+func TestNew_RejectsPastDueDate(t *testing.T) {
+	base := time.Date(2024, 1, 2, 0, 0, 0, 0, time.UTC)
+	uid := mustUserID(t, base)
+	amt := mustKRW(t, 10_000)
+
+	_, err := New(uid, amt, base.Add(-24*time.Hour), base)
+	require.ErrorIs(t, err, ErrDueDateInPast)
 }
 
 func mustUserID(t *testing.T, now time.Time) user.ID {

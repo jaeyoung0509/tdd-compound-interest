@@ -8,6 +8,19 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// Outbox messages for domain event publication
+type OutboxMessage struct {
+	ID            string             `json:"id"`
+	AggregateType string             `json:"aggregate_type"`
+	AggregateID   string             `json:"aggregate_id"`
+	EventType     string             `json:"event_type"`
+	Payload       []byte             `json:"payload"`
+	OccurredAt    pgtype.Timestamptz `json:"occurred_at"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	PublishedAt   pgtype.Timestamptz `json:"published_at"`
+	Attempts      int32              `json:"attempts"`
+}
+
 // Payment aggregate root with compound interest support
 type Payment struct {
 	ID     string `json:"id"`
