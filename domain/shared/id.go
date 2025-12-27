@@ -13,17 +13,3 @@ func NewID() ID {
 func IsZero(id ID) bool {
 	return ulid.ULID(id) == zero
 }
-
-// ParseID parses a string into an ID.
-func ParseID(s string) (ID, error) {
-	u, err := ulid.Parse(s)
-	if err != nil {
-		return ID{}, err
-	}
-	return ID(u), nil
-}
-
-// String returns the string representation of the ID.
-func (id ID) String() string {
-	return ulid.ULID(id).String()
-}

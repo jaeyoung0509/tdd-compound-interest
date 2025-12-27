@@ -1,15 +1,15 @@
 package money
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/jaeyoung0509/compound-interest/domain/shared"
 	"github.com/shopspring/decimal"
 )
 
 var (
-	ErrInvalidCurrency  = shared.NewDomainError(shared.CodeValidation, "invalid currency")
-	ErrCurrencyMismatch = shared.NewDomainError(shared.CodeConflict, "currency mismatch")
+	ErrInvalidCurrency  = errors.New("invalid currency")
+	ErrCurrencyMismatch = errors.New("currency mismatch")
 )
 
 // Currency expects an ISO-like currency identifier.
